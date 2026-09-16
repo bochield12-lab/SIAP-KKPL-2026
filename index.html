@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIAP - KKPL SUKOWIYONO 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-12">
+
+  <!-- APP CONTAINER -->
+  <div class="max-w-md mx-auto relative">
+
+    <!-- 1. HALAMAN LOGIN -->
+    <div id="loginSection" class="p-6 min-h-screen flex flex-col justify-center">
+      <div class="bg-white p-6 rounded-2xl shadow-xl space-y-6 text-center">
+        <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto text-white text-3xl font-bold shadow-lg">
+          SIAP
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-slate-800">SIAP 2026</h1>
+          <p class="text-xs text-slate-500 font-medium mt-1">Sistem Informasi dan Absensi Program<br>KKPL SUKOWIYONO 2026</p>
+        </div>
+
+        <div class="space-y-4 text-left">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">USERNAME UNIK</label>
+            <input type="text" id="usernameInput" placeholder="Contoh: Ketua01" class="w-full p-3 border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <button onclick="handleLogin()" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition">
+            MASUK APLIKASI
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD (HIDDEN DEFAULT) -->
+    <div id="mainDashboard" class="hidden">
+      
+      <!-- HEADER -->
+      <header class="bg-blue-600 text-white p-6 rounded-b-3xl shadow-lg space-y-3">
+        <div class="flex justify-between items-start">
+          <div>
+            <span class="text-xs bg-blue-500 text-blue-100 px-2.5 py-1 rounded-full font-semibold">KKPL SUKOWIYONO 2026</span>
+            <h2 id="userNama" class="text-xl font-bold mt-2">Nama Pengguna</h2>
+            <p id="userJabatan" class="text-xs text-blue-200">Jabatan Anggota</p>
+          </div>
+          <button onclick="logout()" class="text-xs bg-red-500/80 hover:bg-red-600 px-3 py-1.5 rounded-lg transition">Keluar</button>
+        </div>
+      </header>
+
+      <!-- NAVIGATION TABS -->
+      <div class="p-4">
+        <div class="flex bg-white p-1 rounded-xl shadow border text-xs font-bold text-slate-600">
+          <button onclick="switchTab('presensi')" id="tabPresensi" class="flex-1 py-2 rounded-lg bg-blue-600 text-white">Presensi</button>
+          <button onclick="switchTab('jurnal')" id="tabJurnal" class="flex-1 py-2 rounded-lg">Jurnal</button>
+          <button onclick="switchTab('proker')" id="tabProker" class="flex-1 py-2 rounded-lg">Proker</button>
+        </div>
+      </div>
+
+      <div class="px-4 space-y-4">
+
+        <!-- TAB CONTENT 1: PRESENSI -->
+        <div id="secPresensi" class="bg-white p-5 rounded-2xl shadow space-y-4">
+          <h3 class="font-bold text-slate-700 border-b pb-2">Presensi Kehadiran (GPS & Kamera)</h3>
+          
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipe Presensi</label>
+            <select id="tipePresensi" class="w-full p-2.5 border rounded-xl bg-slate-50 text-sm">
+              <option value="Check-in Harian">Check-in Harian</option>
+              <option value="Check-out Harian">Check-out Harian</option>
+              <option value="Presensi Kehadiran PPL">Presensi Kehadiran PPL</option>
+              <option value="Presensi Kegiatan KKN">Presensi Kegiatan KKN</option>
+            </select>
+          </div>
+
+          <!-- KAMERA REALTIME -->
+          <div class="space-y-2">
+            <label class="block text-xs font-semibold text-slate-600">Ambil Foto Selfie (Kamera HP)</label>
+            <div class="relative bg-black rounded-xl overflow-hidden aspect-video flex items-center justify-center">
+              <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
+              <canvas id="canvas" class="hidden"></canvas>
+              <img id="photoPreview" class="hidden w-full h-full object-cover">
+            </div>
+            <button onclick="takeSnapshot()" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold">📷 Ambil Foto</button>
+          </div>
+
+          <!-- GPS STATUS -->
+          <div class="bg-slate-50 p-3 rounded-xl border text-xs space-y-1">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Status GPS:</span>
+              <span id="gpsStatus" class="font-bold text-amber-600">Mendeteksi Lokasi...</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Koordinat:</span>
+              <span id="gpsCoords" class="font-mono text-slate-600">-</span>
+            </div>
+          </div>
+
+          <button onclick="kirimPresensi()" id="btnPresensi" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition">
+            KIRIM PRESENSI
+          </button>
+        </div>
+
+        <!-- TAB CONTENT 2: JURNAL (KKN & PPL) -->
+        <div id="secJurnal" class="hidden space-y-4">
+          <!-- SUB TAB JURNAL -->
+          <div class="flex space-x-2 border-b pb-2">
+            <button onclick="switchJurnalType('kkn')" id="btnJurnalKKN" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700">Jurnal KKN</button>
+            <button onclick="switchJurnalType('ppl')" id="btnJurnalPPL" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600">Jurnal PPL</button>
+          </div>
+
+          <!-- FORM JURNAL KKN -->
+          <div id="formJurnalKKN" class="bg-white p-5 rounded-2xl shadow space-y-3">
+            <h4 class="font-bold text-sm text-slate-700">Input Jurnal Kegiatan KKN</h4>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="number" id="kknHariKe" placeholder="Hari Ke- (Misal: 1)" class="p-2 border rounded-lg text-xs bg-slate-50">
+              <input type="date" id="kknTanggal" class="p-2 border rounded-lg text-xs bg-slate-50">
+            </div>
+            <input type="text" id="kknNama" placeholder="Nama Kegiatan / Proker" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <input type="text" id="kknPJ" placeholder="Penanggung Jawab (PJ)" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <input type="text" id="kknSasaran" placeholder="Sasaran (Misal: Perangkat Desa/Anak SD)" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <input type="text" id="kknTarget" placeholder="Target / Capaian" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <textarea id="kknUraian" rows="2" placeholder="Uraian Kegiatan..." class="w-full p-2 border rounded-lg text-xs bg-slate-50"></textarea>
+            <input type="text" id="kknKendala" placeholder="Kendala & Solusi" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <input type="text" id="kknCatatan" placeholder="Catatan Tambahan" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <button onclick="kirimJurnalKKN()" id="btnKkkn" class="w-full bg-blue-600 text-white text-xs font-bold py-2.5 rounded-lg">SIMPAN JURNAL KKN</button>
+          </div>
+
+          <!-- FORM JURNAL PPL -->
+          <div id="formJurnalPPL" class="hidden bg-white p-5 rounded-2xl shadow space-y-3">
+            <h4 class="font-bold text-sm text-slate-700">Input Jurnal Kegiatan PPL</h4>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="number" id="pplHariKe" placeholder="Hari Ke- (Misal: 1)" class="p-2 border rounded-lg text-xs bg-slate-50">
+              <input type="date" id="pplTanggal" class="p-2 border rounded-lg text-xs bg-slate-50">
+            </div>
+            <input type="text" id="pplSekolah" placeholder="Sekolah / Lembaga PPL" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <input type="text" id="pplMapel" placeholder="Mata Pelajaran & Kelas" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <input type="text" id="pplTarget" placeholder="Target Pembelajaran" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <input type="number" id="pplJumlahSiswa" placeholder="Jumlah Siswa" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <textarea id="pplUraian" rows="2" placeholder="Uraian Pelaksanaan & Metode Mengajar..." class="w-full p-2 border rounded-lg text-xs bg-slate-50"></textarea>
+            <input type="text" id="pplKendala" placeholder="Kendala & Catatan Guru" class="w-full p-2 border rounded-lg text-xs bg-slate-50">
+            <button onclick="kirimJurnalPPL()" id="btnPpl" class="w-full bg-blue-600 text-white text-xs font-bold py-2.5 rounded-lg">SIMPAN JURNAL PPL</button>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 3: KALENDER PROKER -->
+        <div id="secProker" class="hidden bg-white p-5 rounded-2xl shadow space-y-4">
+          <h3 class="font-bold text-slate-700 border-b pb-2">Kalenderisasi & Target Program Kerja</h3>
+          <div id="prokerContainer" class="space-y-3">
+            <p class="text-xs text-slate-400">Memuat kalender proker...</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // WEB APP URL APPS SCRIPT TERPASANG
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzxikIheaG1UOWKBwmGnhATEvbrdDCsc8I_NU5kcbYqQLvdG-Z6lZiGAgwnFS1WR7Yefw/exec';
+
+    let currentUser = null;
+    let currentLat = null;
+    let currentLng = null;
+    let capturedPhotoBase64 = null;
+
+    // LOGIN SYSTEM
+    async function handleLogin() {
+      const username = document.getElementById('usernameInput').value.trim();
+      if (!username) return alert('Masukkan Username Unik Anda!');
+
+      const btn = document.getElementById('btnLogin');
+      btn.innerText = 'Memverifikasi...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'login', username: username })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          currentUser = result.user;
+          document.getElementById('userNama').innerText = currentUser.nama;
+          document.getElementById('userJabatan').innerText = currentUser.jabatan;
+          document.getElementById('loginSection').classList.add('hidden');
+          document.getElementById('mainDashboard').classList.remove('hidden');
+          initCamera();
+          initGPS();
+        } else {
+          alert(result.message);
+        }
+      } catch (err) {
+        alert('Gagal terhubung ke server.');
+      } finally {
+        btn.innerText = 'MASUK APLIKASI';
+        btn.disabled = false;
+      }
+    }
+
+    function logout() {
+      location.reload();
+    }
+
+    // TAB SWITCHING
+    function switchTab(tab) {
+      document.getElementById('secPresensi').classList.add('hidden');
+      document.getElementById('secJurnal').classList.add('hidden');
+      document.getElementById('secProker').classList.add('hidden');
+      
+      document.getElementById('tabPresensi').className = 'flex-1 py-2 rounded-lg';
+      document.getElementById('tabJurnal').className = 'flex-1 py-2 rounded-lg';
+      document.getElementById('tabProker').className = 'flex-1 py-2 rounded-lg';
+
+      if (tab === 'presensi') {
+        document.getElementById('secPresensi').classList.remove('hidden');
+        document.getElementById('tabPresensi').className = 'flex-1 py-2 rounded-lg bg-blue-600 text-white';
+      } else if (tab === 'jurnal') {
+        document.getElementById('secJurnal').classList.remove('hidden');
+        document.getElementById('tabJurnal').className = 'flex-1 py-2 rounded-lg bg-blue-600 text-white';
+      } else if (tab === 'proker') {
+        document.getElementById('secProker').classList.remove('hidden');
+        document.getElementById('tabProker').className = 'flex-1 py-2 rounded-lg bg-blue-600 text-white';
+        loadProker();
+      }
+    }
+
+    function switchJurnalType(type) {
+      if (type === 'kkn') {
+        document.getElementById('formJurnalKKN').classList.remove('hidden');
+        document.getElementById('formJurnalPPL').classList.add('hidden');
+        document.getElementById('btnJurnalKKN').className = 'text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700';
+        document.getElementById('btnJurnalPPL').className = 'text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600';
+      } else {
+        document.getElementById('formJurnalKKN').classList.add('hidden');
+        document.getElementById('formJurnalPPL').classList.remove('hidden');
+        document.getElementById('btnJurnalKKN').className = 'text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600';
+        document.getElementById('btnJurnalPPL').className = 'text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700';
+      }
+    }
+
+    // KAMERA SYSTEM
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        document.getElementById('webcam').srcObject = stream;
+      } catch (err) {
+        alert('Izin kamera ditolak atau tidak didukung.');
+      }
+    }
+
+    function takeSnapshot() {
+      const video = document.getElementById('webcam');
+      const canvas = document.getElementById('canvas');
+      const photo = document.getElementById('photoPreview');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      
+      capturedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      photo.src = capturedPhotoBase64;
+      photo.classList.remove('hidden');
+      video.classList.add('hidden');
+    }
+
+    // GPS SYSTEM
+    function initGPS() {
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+          (pos) => {
+            currentLat = pos.coords.latitude;
+            currentLng = pos.coords.longitude;
+            document.getElementById('gpsStatus').innerText = 'Aktif (Terkunci)';
+            document.getElementById('gpsStatus').className = 'font-bold text-emerald-600';
+            document.getElementById('gpsCoords').innerText = `${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+          },
+          (err) => {
+            document.getElementById('gpsStatus').innerText = 'Gagal Mengakses GPS';
+            document.getElementById('gpsStatus').className = 'font-bold text-red-600';
+          },
+          { enableHighAccuracy: true }
+        );
+      }
+    }
+
+    // SUBMIT PRESENSI
+    async function kirimPresensi() {
+      if (!currentLat || !currentLng) return alert('Menunggu lokasi GPS terkunci!');
+      if (!capturedPhotoBase64) return alert('Harap ambil foto terlebih dahulu!');
+
+      const btn = document.getElementById('btnPresensi');
+      btn.disabled = true;
+      btn.innerText = 'Mengirim Presensi...';
+
+      const payload = {
+        action: 'presensi',
+        username: currentUser.username,
+        nama: currentUser.nama,
+        tipePresensi: document.getElementById('tipePresensi').value,
+        lat: currentLat,
+        lng: currentLng,
+        fotoBase64: capturedPhotoBase64
+      };
+
+      try {
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await res.json();
+        alert(`${result.message}\nStatus Lokasi: ${result.statusRadius}`);
+        location.reload();
+      } catch (err) {
+        alert('Gagal mengirim presensi.');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'KIRIM PRESENSI';
+      }
+    }
+
+    // SUBMIT JURNAL KKN
+    async function kirimJurnalKKN() {
+      const payload = {
+        action: 'jurnal_kkn',
+        username: currentUser.username,
+        hariKe: document.getElementById('kknHariKe').value,
+        tanggal: document.getElementById('kknTanggal').value,
+        namaKegiatan: document.getElementById('kknNama').value,
+        pj: document.getElementById('kknPJ').value,
+        sasaran: document.getElementById('kknSasaran').value,
+        target: document.getElementById('kknTarget').value,
+        uraian: document.getElementById('kknUraian').value,
+        kendala: document.getElementById('kknKendala').value,
+        catatan: document.getElementById('kknCatatan').value
+      };
+
+      try {
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await res.json();
+        alert(result.message);
+      } catch (err) {
+        alert('Gagal menyimpan jurnal.');
+      }
+    }
+
+    // SUBMIT JURNAL PPL
+    async function kirimJurnalPPL() {
+      const payload = {
+        action: 'jurnal_ppl',
+        username: currentUser.username,
+        hariKe: document.getElementById('pplHariKe').value,
+        tanggal: document.getElementById('pplTanggal').value,
+        sekolah: document.getElementById('pplSekolah').value,
+        mapel: document.getElementById('pplMapel').value,
+        target: document.getElementById('pplTarget').value,
+        jumlahSiswa: document.getElementById('pplJumlahSiswa').value,
+        uraian: document.getElementById('pplUraian').value,
+        kendala: document.getElementById('pplKendala').value
+      };
+
+      try {
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await res.json();
+        alert(result.message);
+      } catch (err) {
+        alert('Gagal menyimpan jurnal.');
+      }
+    }
+
+    // LOAD PROKER
+    async function loadProker() {
+      const container = document.getElementById('prokerContainer');
+      try {
+        const res = await fetch(`${API_URL}?action=getProker`);
+        const rows = await res.json();
+
+        if (rows.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-400">Belum ada agenda program kerja.</p>';
+          return;
+        }
+
+        container.innerHTML = rows.map(r => `
+          <div class="border p-3 rounded-xl bg-slate-50 space-y-1">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded">${r[0]}</span>
+              <span class="text-[10px] font-bold text-amber-600">${r[4] || 'Rencana'}</span>
+            </div>
+            <h4 class="font-bold text-xs text-slate-800">${r[1]}</h4>
+            <p class="text-[11px] text-slate-600"><strong>PJ:</strong> ${r[2]}</p>
+            <p class="text-[11px] text-slate-500"><strong>Target:</strong> ${r[3]}</p>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<p class="text-xs text-red-500">Gagal memuat proker.</p>';
+      }
+    }
+  </script>
+</body>
+</html>
