@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIAP SUKOWIYONO 2026 - Presensi Foto</title>
+  <title>SIAP SUKOWIYONO 2026</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Library Export Excel & PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <style>
-    .bg-custom {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    }
+    .bg-custom { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
   </style>
 </head>
 <body class="bg-custom min-h-screen text-slate-100 flex flex-col justify-between font-sans">
 
   <!-- Header -->
-  <header class="p-5 text-center border-b border-slate-700/50 bg-slate-900/40 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center max-w-md mx-auto w-full">
-    <div class="text-left">
-      <h1 class="text-lg font-bold tracking-wide text-emerald-400">SIAP SUKOWIYONO</h1>
-      <p class="text-[10px] text-slate-400">Presensi KKPL STAI Diponegoro 2026</p>
+  <header class="p-4 border-b border-slate-700/50 bg-slate-900/60 backdrop-blur-md sticky top-0 z-20 max-w-lg mx-auto w-full flex justify-between items-center">
+    <div>
+      <h1 class="text-base font-bold text-emerald-400 tracking-wide">SIAP SUKOWIYONO</h1>
+      <p class="text-[10px] text-slate-400">Sistem Informasi & Absensi KKPL 2026</p>
     </div>
     <div id="userInfoHeader" class="hidden text-right">
       <p id="userNamaHeader" class="text-xs font-semibold text-slate-200"></p>
@@ -26,31 +28,30 @@
     </div>
   </header>
 
-  <!-- Main Content Container -->
-  <main class="p-4 max-w-md mx-auto w-full flex-grow flex flex-col justify-center">
+  <!-- Main Container -->
+  <main class="p-4 max-w-lg mx-auto w-full flex-grow flex flex-col justify-center">
     
-    <!-- Alert Message Global -->
+    <!-- Global Alert Message -->
     <div id="statusAlert" class="hidden mb-4 p-3 rounded-xl text-xs font-medium border flex items-center gap-2"></div>
 
-    <!-- 1. HALAMAN LOGIN -->
+    <!-- 1. HALAMAN LOGIN UNIK -->
     <div id="loginCard" class="bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-6 rounded-2xl shadow-xl space-y-5">
       <div class="text-center">
         <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-emerald-500/20">
           <i class="fa-solid fa-user-lock"></i>
         </div>
-        <h2 class="text-base font-bold text-slate-100">Login Anggota KKPL</h2>
-        <p class="text-xs text-slate-400 mt-1">Masukkan Username / NIM Unik terdaftar</p>
+        <h2 class="text-base font-bold text-slate-100">Login Sistem SIAP</h2>
+        <p class="text-xs text-slate-400 mt-1">Masukkan Username Unik (Anggota / DPL)</p>
       </div>
 
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+      <form onsubmit="handleLogin(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Username / ID Unik</label>
           <div class="relative">
-            <input type="text" id="usernameInput" required placeholder="Contoh: 2026001 atau masumam" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 text-slate-200 pl-10 placeholder:text-slate-500">
+            <input type="text" id="usernameInput" required placeholder="Contoh: Ketua01 / DPL01" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 text-slate-200 pl-10">
             <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
           </div>
         </div>
-
         <button type="submit" id="btnLogin" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
           <i class="fa-solid fa-right-to-bracket"></i>
           <span>Masuk Sistem</span>
@@ -58,92 +59,248 @@
       </form>
     </div>
 
-    <!-- 2. HALAMAN PRESENSI FOTO (Hidden saat awal) -->
-    <div id="presensiCard" class="hidden bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-6 rounded-2xl shadow-xl space-y-4">
+    <!-- 2. DASBOR ANGGOTA / MAHASISWA -->
+    <div id="dashAnggotaCard" class="hidden space-y-4">
       
-      <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/50 flex items-center gap-3">
-        <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center font-bold text-base">
-          <i class="fa-solid fa-user-check"></i>
-        </div>
-        <div>
-          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Anggota Terverifikasi</p>
-          <p id="displayNama" class="text-sm font-bold text-emerald-400">-</p>
+      <!-- Navigasi Menu -->
+      <div class="grid grid-cols-4 gap-1 bg-slate-900/80 p-1.5 rounded-xl border border-slate-700/60 text-[11px] text-center font-medium">
+        <button id="tabBtnPresensi" onclick="switchTab('presensi')" class="py-2 rounded-lg bg-emerald-600 text-white transition">Presensi</button>
+        <button id="tabBtnJurnal" onclick="switchTab('jurnal')" class="py-2 rounded-lg text-slate-400 hover:text-white transition">Jurnal</button>
+        <button id="tabBtnProker" onclick="switchTab('proker')" class="py-2 rounded-lg text-slate-400 hover:text-white transition">Proker</button>
+        <button id="tabBtnPiket" onclick="switchTab('piket')" class="py-2 rounded-lg text-slate-400 hover:text-white transition">Piket</button>
+      </div>
+
+      <!-- TAB PRESENSI MAHASISWA -->
+      <div id="tabPresensi" class="bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-5 rounded-2xl shadow-xl space-y-4">
+        <h3 class="text-sm font-bold text-emerald-400 border-b border-slate-700 pb-2"><i class="fa-solid fa-location-dot"></i> Form Presensi Kehadiran</h3>
+        
+        <form onsubmit="submitPresensi(event)" class="space-y-4">
+          
+          <!-- Pilihan Tipe Presensi (Termasuk Piket, Izin, Sakit) -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Tipe Presensi</label>
+            <select id="tipePresensi" required onchange="handleTipePresensi(this.value)" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-emerald-500 text-slate-200">
+              <option value="Check-In Posko">Check-In Posko (Absen Datang)</option>
+              <option value="Check-Out Posko">Check-Out Posko (Absen Pulang)</option>
+              <option value="Check-In Piket">Check-In Piket</option>
+              <option value="Check-Out Piket">Check-Out Piket</option>
+              <option value="Presensi Kegiatan">Presensi Kegiatan</option>
+              <option value="Izin">Izin</option>
+              <option value="Sakit">Sakit</option>
+            </select>
+          </div>
+
+          <!-- Sub-Pilihan Presensi Kegiatan -->
+          <div id="boxSubKegiatan" class="hidden space-y-3 p-3 bg-slate-900/50 rounded-xl border border-slate-700/50">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Kategori Kegiatan</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800 cursor-pointer">
+                  <input type="radio" name="katKegiatan" value="PPL" checked onchange="toggleKKNInput(false)" class="text-emerald-500">
+                  <span class="ml-2 text-xs">PPL</span>
+                </label>
+                <label class="flex items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800 cursor-pointer">
+                  <input type="radio" name="katKegiatan" value="KKN" onchange="toggleKKNInput(true)" class="text-emerald-500">
+                  <span class="ml-2 text-xs">KKN</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="boxNamaKegiatanKKN" class="hidden">
+              <label class="block text-[11px] font-semibold text-emerald-400 mb-1">Nama Kegiatan KKN</label>
+              <input type="text" id="namaKegiatanKKN" placeholder="Contoh: Sosialisasi UMKM / Mengajar SD" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs focus:outline-none text-slate-200">
+            </div>
+          </div>
+
+          <!-- Keterangan Khusus (Izin / Sakit / Luar Radius) -->
+          <div id="boxKeteranganKhusus" class="hidden">
+            <label id="labelKeteranganKhusus" class="block text-[11px] font-semibold text-amber-400 mb-1">Keterangan / Alasan</label>
+            <textarea id="keteranganKhususInput" rows="2" placeholder="Tuliskan keterangan / alasan..." class="w-full bg-slate-900 border border-amber-500/50 rounded-lg p-2 text-xs focus:outline-none text-slate-200"></textarea>
+          </div>
+
+          <!-- KAMERA LIVE REAL-TIME -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Foto Swafoto (Live Camera Only)</label>
+            <div class="relative bg-slate-900/80 border border-dashed border-slate-600 rounded-xl p-4 text-center cursor-pointer hover:border-emerald-500 transition" onclick="document.getElementById('fotoInput').click()">
+              <input type="file" id="fotoInput" accept="image/*" capture="user" required onchange="processAndPreviewFoto(event)" class="hidden">
+              
+              <div id="uploadPlaceholder" class="space-y-1">
+                <i class="fa-solid fa-camera text-2xl text-emerald-400 mb-1"></i>
+                <p class="text-xs text-slate-300 font-medium">Buka Kamera HP</p>
+                <p class="text-[10px] text-slate-500">Ambil foto langsung (Auto-compress 500KB - 1.5MB)</p>
+              </div>
+
+              <div id="previewContainer" class="hidden relative">
+                <img id="imgPreview" class="max-h-48 mx-auto rounded-lg border border-slate-700 shadow-md">
+                <p id="fotoSizeText" class="text-[11px] text-emerald-400 mt-2 font-medium"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- GPS Status -->
+          <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-700/60 text-xs flex justify-between items-center">
+            <span class="text-slate-400">Jarak ke Posko:</span>
+            <span id="distanceText" class="font-semibold text-emerald-400">Mengecek GPS...</span>
+          </div>
+
+          <button type="submit" id="btnSubmitPresensi" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Kirim Presensi</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- TAB JURNAL MAHASISWA (Sesuai Header Sheet Lengkap) -->
+      <div id="tabJurnal" class="hidden bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-5 rounded-2xl shadow-xl space-y-4">
+        <h3 class="text-sm font-bold text-emerald-400 border-b border-slate-700 pb-2"><i class="fa-solid fa-book"></i> Form Isi Jurnal Harian</h3>
+        <form onsubmit="submitJurnal(event)" class="space-y-3">
+          
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-300 font-semibold mb-1">Kategori</label>
+              <select id="jurnalKategori" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+                <option value="KKN">KKN</option>
+                <option value="PPL">PPL</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-300 font-semibold mb-1">Minggu Ke-</label>
+              <input type="number" id="jurnalMinggu" min="1" max="8" value="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-300 font-semibold mb-1">Tanggal</label>
+              <input type="date" id="jurnalTanggal" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-300 font-semibold mb-1">Sekolah / Lokasi</label>
+              <input type="text" id="jurnalSekolah" placeholder="Contoh: Posko / MA Diponegoro" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-slate-300 font-semibold mb-1">Rincian Kegiatan</label>
+            <textarea id="jurnalRincian" rows="3" required placeholder="Jelaskan detail kegiatan harian..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-300 font-semibold mb-1">Sasaran</label>
+              <input type="text" id="jurnalSasaran" placeholder="Contoh: Warga RT 02" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-300 font-semibold mb-1">Target</label>
+              <input type="text" id="jurnalTarget" placeholder="Contoh: 20 Orang" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-slate-300 font-semibold mb-1">Keterangan / Catatan (Opsional)</label>
+            <input type="text" id="jurnalKeterangan" placeholder="Catatan tambahan kegiatan..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200">
+          </div>
+
+          <button type="submit" id="btnSubmitJurnal" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition">Simpan Jurnal</button>
+        </form>
+      </div>
+
+      <!-- TAB PROKER -->
+      <div id="tabProker" class="hidden bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-5 rounded-2xl shadow-xl space-y-3">
+        <h3 class="text-sm font-bold text-emerald-400 border-b border-slate-700 pb-2"><i class="fa-solid fa-list-check"></i> Program Kerja KKPL</h3>
+        <div id="listProkerContainer" class="space-y-2 text-xs">
+          <p class="text-slate-400 text-center py-4">Memuat data proker...</p>
         </div>
       </div>
 
-      <form id="presensiForm" onsubmit="submitPresensi(event)" class="space-y-4">
+      <!-- TAB PIKET -->
+      <div id="tabPiket" class="hidden bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-5 rounded-2xl shadow-xl space-y-3">
+        <h3 class="text-sm font-bold text-emerald-400 border-b border-slate-700 pb-2"><i class="fa-solid fa-calendar-days"></i> Jadwal Piket Posko</h3>
+        <div id="listPiketContainer" class="space-y-2 text-xs">
+          <p class="text-slate-400 text-center py-4">Memuat jadwal piket...</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. DASBOR KHUSUS DPL -->
+    <div id="dashDplCard" class="hidden bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-5 rounded-2xl shadow-xl space-y-5">
+      <div class="border-b border-slate-700 pb-3 flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-user-shield"></i> Dasbor Monitoring DPL</h3>
+          <p class="text-[10px] text-slate-400">Rekapitulasi Presensi & Jurnal Mahasiswa</p>
+        </div>
+      </div>
+
+      <!-- Filter Tanggal & Export -->
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 space-y-3 text-xs">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Pilih Tanggal Rekapitulasi:</label>
+          <input type="date" id="filterTanggalDpl" onchange="loadRekapDpl()" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2 text-slate-200">
+        </div>
         
-        <!-- Status Kehadiran -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Status Kehadiran</label>
-          <div class="grid grid-cols-2 gap-2">
-            <label class="flex items-center justify-center p-3 rounded-xl border border-slate-700 bg-slate-900/50 cursor-pointer hover:bg-slate-700/50 transition">
-              <input type="radio" name="status" value="Hadir Posko" checked onchange="toggleAlasan(false)" class="text-emerald-500 focus:ring-0">
-              <span class="ml-2 text-xs font-medium">Hadir Posko</span>
-            </label>
-            <label class="flex items-center justify-center p-3 rounded-xl border border-slate-700 bg-slate-900/50 cursor-pointer hover:bg-slate-700/50 transition">
-              <input type="radio" name="status" value="Kegiatan Luar Desa" onchange="toggleAlasan(true)" class="text-emerald-500 focus:ring-0">
-              <span class="ml-2 text-xs font-medium">Luar Desa</span>
-            </label>
-          </div>
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="exportToExcel()" class="py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-semibold flex items-center justify-center gap-1">
+            <i class="fa-solid fa-file-excel"></i> Unduh Excel
+          </button>
+          <button onclick="exportToPDF()" class="py-2 bg-rose-700 hover:bg-rose-600 text-white rounded-lg font-semibold flex items-center justify-center gap-1">
+            <i class="fa-solid fa-file-pdf"></i> Unduh PDF
+          </button>
         </div>
+      </div>
 
-        <!-- Input Alasan (Luar Desa) -->
-        <div id="alasanBox" class="hidden">
-          <label class="block text-xs font-semibold uppercase tracking-wider text-amber-400 mb-1">Keterangan / Alasan Luar Desa</label>
-          <textarea id="alasanInput" rows="2" placeholder="Contoh: Izin kuliah / koordinasi dinas" class="w-full bg-slate-900/80 border border-amber-500/50 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400 text-slate-200"></textarea>
+      <!-- Tabel Presensi DPL -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-clipboard-user"></i> Rekap Presensi Mahasiswa</h4>
+        <div class="overflow-x-auto border border-slate-700 rounded-xl">
+          <table id="tablePresensiDpl" class="w-full text-[10px] text-left text-slate-300">
+            <thead class="bg-slate-900 text-emerald-400 uppercase border-b border-slate-700">
+              <tr>
+                <th class="p-2">Waktu</th>
+                <th class="p-2">Nama</th>
+                <th class="p-2">Status</th>
+                <th class="p-2">Foto</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyPresensiDpl">
+              <tr><td colspan="4" class="p-3 text-center text-slate-500">Pilih tanggal untuk memuat data...</td></tr>
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- FOTO BUKTI BISA AMBIL LANGSUNG / KAMERA -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Foto Bukti / Swafoto</label>
-          <div class="relative bg-slate-900/80 border border-dashed border-slate-600 rounded-xl p-4 text-center cursor-pointer hover:border-emerald-500 transition" onclick="document.getElementById('fotoInput').click()">
-            <input type="file" id="fotoInput" accept="image/*" capture="user" required onchange="processAndPreviewFoto(event)" class="hidden">
-            
-            <div id="uploadPlaceholder" class="space-y-1">
-              <i class="fa-solid fa-camera text-2xl text-emerald-400 mb-1"></i>
-              <p class="text-xs text-slate-300 font-medium">Ambil Foto / Upload Gambar</p>
-              <p class="text-[10px] text-slate-500">Foto akan otomatis di-compress (500 KB - 1.5 MB)</p>
-            </div>
-
-            <div id="previewContainer" class="hidden relative">
-              <img id="imgPreview" class="max-h-48 mx-auto rounded-lg border border-slate-700 shadow-md">
-              <p id="fotoSizeText" class="text-[11px] text-emerald-400 mt-2 font-medium"><i class="fa-solid fa-circle-check"></i> Foto Siap Diunggah</p>
-            </div>
-          </div>
+      <!-- Tabel Jurnal DPL -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-book-open"></i> Rekap Jurnal Harian</h4>
+        <div class="overflow-x-auto border border-slate-700 rounded-xl">
+          <table id="tableJurnalDpl" class="w-full text-[10px] text-left text-slate-300">
+            <thead class="bg-slate-900 text-emerald-400 uppercase border-b border-slate-700">
+              <tr>
+                <th class="p-2">Nama</th>
+                <th class="p-2">Kategori</th>
+                <th class="p-2">Rincian</th>
+                <th class="p-2">Sasaran</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyJurnalDpl">
+              <tr><td colspan="4" class="p-3 text-center text-slate-500">Pilih tanggal untuk memuat data...</td></tr>
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- Indikator GPS / Jarak -->
-        <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-700/60 text-xs space-y-1">
-          <div class="flex justify-between items-center text-slate-400">
-            <span>Koordinat Posko:</span>
-            <span class="font-mono text-slate-300">-8.0645, 111.9012</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">Jarak Kamu:</span>
-            <span id="distanceText" class="font-semibold text-emerald-400">Mengecek GPS...</span>
-          </div>
-        </div>
-
-        <!-- Tombol Submit -->
-        <button type="submit" id="btnSubmit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
-          <i class="fa-solid fa-paper-plane"></i>
-          <span>Kirim Presensi Sekarang</span>
-        </button>
-
-      </form>
     </div>
 
   </main>
 
   <!-- Footer -->
-  <footer class="p-4 text-center text-xs text-slate-500 border-t border-slate-800 max-w-md mx-auto w-full">
+  <footer class="p-4 text-center text-xs text-slate-500 border-t border-slate-800 max-w-lg mx-auto w-full">
     &copy; 2026 KKPL Sukowiyono - STAI Diponegoro Tulungagung
   </footer>
 
-  <!-- Script Logika Frontend -->
+  <!-- SCRIPT LOGIKA -->
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyS98kG9SAnzC1_f6ZeYXw8wGNJHT3Ni9rD-ALpSmPucBdhcAMMuqXRl7obq_Jjz3xu/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw-MY5LismCiKcH__fhWlN3NmF9bXH4r3xdceiZSnXJjjOJkzsOGu2Jwb-C4cK5dmXpEA/exec";
     
     const POSKO_LAT = -8.064567;
     const POSKO_LNG = 111.901234;
@@ -154,20 +311,24 @@
     let userLng = null;
     let currentDistance = null;
     let base64Image = "";
+    let rekapDataDpl = { presensi: [], jurnal: [] };
 
     window.addEventListener("DOMContentLoaded", () => {
       const savedUser = localStorage.getItem("siap_user");
       if (savedUser) {
         currentUser = JSON.parse(savedUser);
-        showPresensiPage();
+        checkUserRoleAndRedirect();
       }
+      
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("filterTanggalDpl").value = today;
+      document.getElementById("jurnalTanggal").value = today;
     });
 
     async function handleLogin(e) {
       e.preventDefault();
       const username = document.getElementById("usernameInput").value.trim();
       const btn = document.getElementById("btnLogin");
-
       if (!username) return;
 
       btn.disabled = true;
@@ -181,10 +342,10 @@
         if (result.status === "success") {
           currentUser = result.user;
           localStorage.setItem("siap_user", JSON.stringify(currentUser));
-          showPresensiPage();
+          checkUserRoleAndRedirect();
           showAlert(`Selamat datang, ${currentUser.nama}!`, "success");
         } else {
-          showAlert(result.message || "Username / ID Unik tidak ditemukan!", "error");
+          showAlert(result.message || "Username Unik tidak terdaftar!", "error");
         }
       } catch (err) {
         showAlert("Gagal terhubung ke server login.", "error");
@@ -194,25 +355,84 @@
       }
     }
 
-    function showPresensiPage() {
+    function checkUserRoleAndRedirect() {
       document.getElementById("loginCard").classList.add("hidden");
-      document.getElementById("presensiCard").classList.remove("hidden");
       document.getElementById("userInfoHeader").classList.remove("hidden");
-      
-      document.getElementById("displayNama").textContent = currentUser.nama;
       document.getElementById("userNamaHeader").textContent = currentUser.nama;
-      
-      initGPS();
+
+      if (currentUser.jabatan && currentUser.jabatan.toUpperCase() === "DPL") {
+        document.getElementById("dashDplCard").classList.remove("hidden");
+        document.getElementById("dashAnggotaCard").classList.add("hidden");
+        loadRekapDpl();
+      } else {
+        document.getElementById("dashAnggotaCard").classList.remove("hidden");
+        document.getElementById("dashDplCard").classList.add("hidden");
+        initGPS();
+        loadProkerData();
+        loadPiketData();
+      }
     }
 
     function logout() {
       localStorage.removeItem("siap_user");
       currentUser = null;
-      document.getElementById("presensiCard").classList.add("hidden");
+      document.getElementById("dashAnggotaCard").classList.add("hidden");
+      document.getElementById("dashDplCard").classList.add("hidden");
       document.getElementById("userInfoHeader").classList.add("hidden");
       document.getElementById("loginCard").classList.remove("hidden");
       document.getElementById("usernameInput").value = "";
       hideAlert();
+    }
+
+    function switchTab(tabName) {
+      ['presensi', 'jurnal', 'proker', 'piket'].forEach(t => {
+        const cap = t.charAt(0).toUpperCase() + t.slice(1);
+        document.getElementById(`tab${cap}`).classList.add("hidden");
+        document.getElementById(`tabBtn${cap}`).className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
+      });
+
+      const activeCap = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+      document.getElementById(`tab${activeCap}`).classList.remove("hidden");
+      document.getElementById(`tabBtn${activeCap}`).className = "py-2 rounded-lg bg-emerald-600 text-white transition";
+    }
+
+    function handleTipePresensi(val) {
+      const boxSub = document.getElementById("boxSubKegiatan");
+      const boxKet = document.getElementById("boxKeteranganKhusus");
+      const labelKet = document.getElementById("labelKeteranganKhusus");
+      const inputKet = document.getElementById("keteranganKhususInput");
+
+      if (val === "Presensi Kegiatan") {
+        boxSub.classList.remove("hidden");
+      } else {
+        boxSub.classList.add("hidden");
+      }
+
+      if (val === "Izin" || val === "Sakit") {
+        boxKet.classList.remove("hidden");
+        inputKet.setAttribute("required", "true");
+        labelKet.textContent = val === "Izin" ? "Alasan Izin (Wajib)" : "Keterangan Sakit (Wajib)";
+      } else if (currentDistance && currentDistance > MAX_RADIUS_KM) {
+        boxKet.classList.remove("hidden");
+        inputKet.setAttribute("required", "true");
+        labelKet.textContent = "Alasan Berada di Luar Radius Posko (> 2km)";
+      } else {
+        boxKet.classList.add("hidden");
+        inputKet.removeAttribute("required");
+      }
+    }
+
+    function toggleKKNInput(isKKN) {
+      const box = document.getElementById("boxNamaKegiatanKKN");
+      const input = document.getElementById("namaKegiatanKKN");
+      if (isKKN) {
+        box.classList.remove("hidden");
+        input.setAttribute("required", "true");
+      } else {
+        box.classList.add("hidden");
+        input.removeAttribute("required");
+        input.value = "";
+      }
     }
 
     function initGPS() {
@@ -225,10 +445,18 @@
             currentDistance = calculateDistance(userLat, userLng, POSKO_LAT, POSKO_LNG);
             
             distText.textContent = `${currentDistance.toFixed(2)} km dari posko`;
+            const tipe = document.getElementById("tipePresensi").value;
             if (currentDistance <= MAX_RADIUS_KM) {
               distText.className = "font-semibold text-emerald-400";
+              if (tipe !== "Izin" && tipe !== "Sakit") {
+                document.getElementById("boxKeteranganKhusus").classList.add("hidden");
+                document.getElementById("keteranganKhususInput").removeAttribute("required");
+              }
             } else {
               distText.className = "font-semibold text-amber-400";
+              document.getElementById("boxKeteranganKhusus").classList.remove("hidden");
+              document.getElementById("keteranganKhususInput").setAttribute("required", "true");
+              document.getElementById("labelKeteranganKhusus").textContent = "Alasan Berada di Luar Radius Posko (> 2km)";
             }
           },
           (err) => {
@@ -237,8 +465,6 @@
           },
           { enableHighAccuracy: true }
         );
-      } else {
-        distText.textContent = "Browser tidak mendukung GPS";
       }
     }
 
@@ -249,11 +475,9 @@
       const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                 Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                 Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     }
 
-    // LOGIKA AUTO RESIZE & COMPRESS FOTO (Target: 500 KB - 1500 KB)
     function processAndPreviewFoto(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -265,9 +489,8 @@
           const canvas = document.createElement("canvas");
           let width = img.width;
           let height = img.height;
-
-          // Resize dimensi jika melebihi HD (max width 1600px)
           const MAX_WIDTH = 1600;
+
           if (width > MAX_WIDTH) {
             height = Math.round((height * MAX_WIDTH) / width);
             width = MAX_WIDTH;
@@ -279,21 +502,15 @@
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Kompresi bertahap target ~500KB - 1.5MB
           let quality = 0.85;
           let dataUrl = canvas.toDataURL("image/jpeg", quality);
-
-          // Hitung estimasi ukuran KB
           let head = "data:image/jpeg;base64,";
-          let sizeInBytes = Math.round((dataUrl.length - head.length) * 3 / 4);
-          let sizeInKB = Math.round(sizeInBytes / 1024);
+          let sizeInKB = Math.round((dataUrl.length - head.length) * 3 / 4 / 1024);
 
-          // Jika masih > 1500 KB, turunkan kualitas gambar
           while (sizeInKB > 1500 && quality > 0.3) {
             quality -= 0.1;
             dataUrl = canvas.toDataURL("image/jpeg", quality);
-            sizeInBytes = Math.round((dataUrl.length - head.length) * 3 / 4);
-            sizeInKB = Math.round(sizeInBytes / 1024);
+            sizeInKB = Math.round((dataUrl.length - head.length) * 3 / 4 / 1024);
           }
 
           base64Image = dataUrl;
@@ -307,98 +524,245 @@
       reader.readAsDataURL(file);
     }
 
-    function toggleAlasan(isLuarDesa) {
-      const box = document.getElementById("alasanBox");
-      const input = document.getElementById("alasanInput");
-      if (isLuarDesa) {
-        box.classList.remove("hidden");
-        input.setAttribute("required", "true");
-      } else {
-        box.classList.add("hidden");
-        input.removeAttribute("required");
-        input.value = "";
-      }
-    }
-
     async function submitPresensi(e) {
       e.preventDefault();
-      const btn = document.getElementById("btnSubmit");
-      const status = document.querySelector('input[name="status"]:checked').value;
-      const alasan = document.getElementById("alasanInput").value;
+      const btn = document.getElementById("btnSubmitPresensi");
+      const tipe = document.getElementById("tipePresensi").value;
+      
+      let statusFull = tipe;
+      if (tipe === "Presensi Kegiatan") {
+        const kat = document.querySelector('input[name="katKegiatan"]:checked').value;
+        statusFull = `Kegiatan - ${kat}`;
+        if (kat === "KKN") {
+          const namaKKN = document.getElementById("namaKegiatanKKN").value;
+          statusFull += ` (${namaKKN})`;
+        }
+      }
+
+      const alasan = document.getElementById("keteranganKhususInput").value || "-";
 
       if (!base64Image) {
-        showAlert("Harap ambil/upload foto bukti presensi!", "error");
+        showAlert("Harap ambil foto kamera terlebih dahulu!", "error");
         return;
       }
 
       if (!userLat || !userLng) {
-        showAlert("GPS belum siap. Mohon izinkan akses lokasi di HP kamu!", "error");
-        return;
-      }
-
-      if (status === "Hadir Posko" && currentDistance > MAX_RADIUS_KM) {
-        showAlert(`Posisi kamu (${currentDistance.toFixed(2)} km) di luar radius posko (Maks 2 km). Pilih 'Luar Desa' jika ada kegiatan luar.`, "warning");
+        showAlert("GPS belum siap. Izinkan akses lokasi di HP kamu!", "error");
         return;
       }
 
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Mengirim Data & Foto...</span>`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Mengirim...</span>`;
 
       const payload = {
+        action: "submitPresensi",
         username: currentUser.username,
         nama: currentUser.nama,
-        status: status,
+        status: statusFull,
         alasan: alasan,
         latitude: userLat,
         longitude: userLng,
-        jarakKm: currentDistance.toFixed(2),
+        jarakKm: currentDistance ? currentDistance.toFixed(2) : "0",
         foto: base64Image
       };
 
       try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
+        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
         const result = await res.json();
-
         if (result.status === "success") {
-          showAlert("Presensi & Foto berhasil dikirim! Terima kasih.", "success");
-          document.getElementById("presensiForm").reset();
-          document.getElementById("uploadPlaceholder").classList.remove("hidden");
+          showAlert("Presensi berhasil dikirim!", "success");
           document.getElementById("previewContainer").classList.add("hidden");
+          document.getElementById("uploadPlaceholder").classList.remove("hidden");
           base64Image = "";
-          toggleAlasan(false);
         } else {
           showAlert(result.message || "Gagal menyimpan presensi.", "error");
         }
       } catch (err) {
-        showAlert("Terjadi kesalahan koneksi ke server.", "error");
+        showAlert("Terjadi kesalahan koneksi.", "error");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Kirim Presensi Sekarang</span>`;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Kirim Presensi</span>`;
       }
+    }
+
+    async function submitJurnal(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSubmitJurnal");
+      const payload = {
+        action: "submitJurnal",
+        nama: currentUser.nama,
+        kategori: document.getElementById("jurnalKategori").value,
+        sekolah: document.getElementById("jurnalSekolah").value || "-",
+        mingguKe: document.getElementById("jurnalMinggu").value,
+        tanggal: document.getElementById("jurnalTanggal").value,
+        rincian: document.getElementById("jurnalRincian").value,
+        sasaran: document.getElementById("jurnalSasaran").value || "-",
+        target: document.getElementById("jurnalTarget").value || "-",
+        keterangan: document.getElementById("jurnalKeterangan").value || "-"
+      };
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
+
+      try {
+        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        const result = await res.json();
+        if (result.status === "success") {
+          showAlert("Jurnal berhasil disimpan!", "success");
+          e.target.reset();
+        } else {
+          showAlert("Gagal menyimpan jurnal.", "error");
+        }
+      } catch (err) {
+        showAlert("Terjadi kesalahan koneksi.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Simpan Jurnal";
+      }
+    }
+
+    async function loadProkerData() {
+      try {
+        const res = await fetch(`${API_URL}?action=getProker`);
+        const result = await res.json();
+        const container = document.getElementById("listProkerContainer");
+        if (result.status === "success" && result.data.length > 0) {
+          container.innerHTML = result.data.map(p => `
+            <div class="p-2.5 bg-slate-900/60 rounded-lg border border-slate-700/50 flex justify-between items-center">
+              <div>
+                <p class="font-semibold text-slate-200">${p.proker}</p>
+                <p class="text-[10px] text-slate-400">PJ: ${p.pj}</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.status === 'Selesai' ? 'bg-emerald-900/60 text-emerald-400' : 'bg-amber-900/60 text-amber-400'}">${p.status}</span>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `<p class="text-slate-500 text-center py-2">Belum ada data proker.</p>`;
+        }
+      } catch (e) {}
+    }
+
+    async function loadPiketData() {
+      try {
+        const res = await fetch(`${API_URL}?action=getPiket`);
+        const result = await res.json();
+        const container = document.getElementById("listPiketContainer");
+        if (result.status === "success" && result.data.length > 0) {
+          container.innerHTML = result.data.map(p => `
+            <div class="p-2.5 bg-slate-900/60 rounded-lg border border-slate-700/50 flex justify-between items-center">
+              <span class="font-semibold text-slate-200">${p.hari}</span>
+              <span class="text-slate-300">${p.petugas}</span>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `<p class="text-slate-500 text-center py-2">Belum ada jadwal piket.</p>`;
+        }
+      } catch (e) {}
+    }
+
+    async function loadRekapDpl() {
+      const tgl = document.getElementById("filterTanggalDpl").value;
+      const tbodyP = document.getElementById("tbodyPresensiDpl");
+      const tbodyJ = document.getElementById("tbodyJurnalDpl");
+
+      tbodyP.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</td></tr>`;
+      tbodyJ.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data...</td></tr>`;
+
+      try {
+        const res = await fetch(`${API_URL}?action=getRekapDpl&tanggal=${tgl}`);
+        const result = await res.json();
+
+        if (result.status === "success") {
+          rekapDataDpl = result;
+
+          if (result.presensi.length > 0) {
+            tbodyP.innerHTML = result.presensi.map(p => `
+              <tr class="border-b border-slate-800">
+                <td class="p-2">${p.waktu}</td>
+                <td class="p-2 font-semibold">${p.nama}</td>
+                <td class="p-2 text-emerald-400">${p.status}</td>
+                <td class="p-2">${p.foto !== '-' ? `<a href="${p.foto}" target="_blank" class="text-sky-400 underline">Lihat</a>` : '-'}</td>
+              </tr>
+            `).join('');
+          } else {
+            tbodyP.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Tidak ada presensi pada tanggal ini.</td></tr>`;
+          }
+
+          if (result.jurnal.length > 0) {
+            tbodyJ.innerHTML = result.jurnal.map(j => `
+              <tr class="border-b border-slate-800">
+                <td class="p-2 font-semibold">${j.nama}</td>
+                <td class="p-2">${j.kategori}</td>
+                <td class="p-2">${j.rincian}</td>
+                <td class="p-2 text-emerald-400">${j.sasaran}</td>
+              </tr>
+            `).join('');
+          } else {
+            tbodyJ.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Tidak ada jurnal pada tanggal ini.</td></tr>`;
+          }
+        }
+      } catch (err) {
+        tbodyP.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-rose-400">Gagal mengambil data.</td></tr>`;
+      }
+    }
+
+    function exportToExcel() {
+      const tgl = document.getElementById("filterTanggalDpl").value;
+      const wb = XLSX.utils.book_new();
+
+      const wsP = XLSX.utils.json_to_sheet(rekapDataDpl.presensi);
+      XLSX.utils.book_append_sheet(wb, wsP, "Presensi");
+
+      const wsJ = XLSX.utils.json_to_sheet(rekapDataDpl.jurnal);
+      XLSX.utils.book_append_sheet(wb, wsJ, "Jurnal_Kegiatan");
+
+      XLSX.writeFile(wb, `Rekap_KKPL_Sukowiyono_${tgl}.xlsx`);
+    }
+
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const tgl = document.getElementById("filterTanggalDpl").value;
+
+      doc.setFontSize(14);
+      doc.text(`REKAPITULASI KKPL SUKOWIYONO - TANGGAL: ${tgl}`, 14, 15);
+
+      doc.setFontSize(11);
+      doc.text("1. Data Presensi", 14, 25);
+      
+      const presensiRows = rekapDataDpl.presensi.map(p => [p.waktu, p.nama, p.status, p.gps, p.foto]);
+      doc.autoTable({
+        startY: 28,
+        head: [['Waktu', 'Nama', 'Status', 'GPS', 'Foto']],
+        body: presensiRows,
+      });
+
+      const nextY = doc.lastAutoTable.finalY + 10;
+      doc.text("2. Data Jurnal Harian", 14, nextY);
+
+      const jurnalRows = rekapDataDpl.jurnal.map(j => [j.nama, j.kategori, j.rincian, j.sasaran]);
+      doc.autoTable({
+        startY: nextY + 3,
+        head: [['Nama', 'Kategori', 'Rincian Kegiatan', 'Sasaran']],
+        body: jurnalRows,
+      });
+
+      doc.save(`Rekap_KKPL_Sukowiyono_${tgl}.pdf`);
     }
 
     function showAlert(msg, type) {
       const alert = document.getElementById("statusAlert");
-      alert.classList.remove("hidden", "bg-emerald-900/50", "border-emerald-500", "text-emerald-200", "bg-rose-900/50", "border-rose-500", "text-rose-200", "bg-amber-900/50", "border-amber-500", "text-amber-200");
-
+      alert.classList.remove("hidden", "bg-emerald-900/50", "border-emerald-500", "text-emerald-200", "bg-rose-900/50", "border-rose-500", "text-rose-200");
       if (type === "success") {
         alert.classList.add("bg-emerald-900/50", "border-emerald-500", "text-emerald-200");
         alert.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${msg}</span>`;
-      } else if (type === "warning") {
-        alert.classList.add("bg-amber-900/50", "border-amber-500", "text-amber-200");
-        alert.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${msg}</span>`;
       } else {
         alert.classList.add("bg-rose-900/50", "border-rose-500", "text-rose-200");
         alert.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>${msg}</span>`;
       }
     }
 
-    function hideAlert() {
-      document.getElementById("statusAlert").classList.add("hidden");
-    }
+    function hideAlert() { document.getElementById("statusAlert").classList.add("hidden"); }
   </script>
 </body>
 </html>
