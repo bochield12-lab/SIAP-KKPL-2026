@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Presensi KKPL Sukowiyono 2026</title>
+  <title>SIAP SUKOWIYONO 2026 - Presensi Foto</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -15,31 +15,64 @@
 <body class="bg-custom min-h-screen text-slate-100 flex flex-col justify-between font-sans">
 
   <!-- Header -->
-  <header class="p-6 text-center border-b border-slate-700/50 bg-slate-900/40 backdrop-blur-md sticky top-0 z-10">
-    <h1 class="text-2xl font-bold tracking-wide text-emerald-400">SIAP SUKOWIYONO</h1>
-    <p class="text-xs text-slate-400 mt-1">Sistem Informasi & Absensi Presensi KKPL 2026</p>
+  <header class="p-5 text-center border-b border-slate-700/50 bg-slate-900/40 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center max-w-md mx-auto w-full">
+    <div class="text-left">
+      <h1 class="text-lg font-bold tracking-wide text-emerald-400">SIAP SUKOWIYONO</h1>
+      <p class="text-[10px] text-slate-400">Presensi KKPL STAI Diponegoro 2026</p>
+    </div>
+    <div id="userInfoHeader" class="hidden text-right">
+      <p id="userNamaHeader" class="text-xs font-semibold text-slate-200"></p>
+      <button onclick="logout()" class="text-[10px] text-rose-400 hover:underline">Keluar <i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
   </header>
 
-  <!-- Main Content -->
+  <!-- Main Content Container -->
   <main class="p-4 max-w-md mx-auto w-full flex-grow flex flex-col justify-center">
-    <div class="bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-6 rounded-2xl shadow-xl">
-      
-      <!-- Alert Message -->
-      <div id="statusAlert" class="hidden mb-4 p-3 rounded-xl text-sm font-medium border flex items-center gap-2"></div>
+    
+    <!-- Alert Message Global -->
+    <div id="statusAlert" class="hidden mb-4 p-3 rounded-xl text-xs font-medium border flex items-center gap-2"></div>
 
-      <form id="presensiForm" onsubmit="submitPresensi(event)" class="space-y-4">
-        
-        <!-- Dropdown Nama -->
+    <!-- 1. HALAMAN LOGIN -->
+    <div id="loginCard" class="bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-6 rounded-2xl shadow-xl space-y-5">
+      <div class="text-center">
+        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-emerald-500/20">
+          <i class="fa-solid fa-user-lock"></i>
+        </div>
+        <h2 class="text-base font-bold text-slate-100">Login Anggota KKPL</h2>
+        <p class="text-xs text-slate-400 mt-1">Masukkan Username / NIM Unik terdaftar</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Nama Anggota</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Username / ID Unik</label>
           <div class="relative">
-            <select id="namaSelect" required class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 appearance-none text-slate-200">
-              <option value="" disabled selected>Pilih Nama Kamu...</option>
-            </select>
-            <i class="fa-solid font-bold fa-chevron-down absolute right-4 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
+            <input type="text" id="usernameInput" required placeholder="Contoh: 2026001 atau masumam" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 text-slate-200 pl-10 placeholder:text-slate-500">
+            <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
           </div>
         </div>
 
+        <button type="submit" id="btnLogin" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>Masuk Sistem</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- 2. HALAMAN PRESENSI FOTO (Hidden saat awal) -->
+    <div id="presensiCard" class="hidden bg-slate-800/80 backdrop-blur-lg border border-slate-700 p-6 rounded-2xl shadow-xl space-y-4">
+      
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/50 flex items-center gap-3">
+        <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center font-bold text-base">
+          <i class="fa-solid fa-user-check"></i>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Anggota Terverifikasi</p>
+          <p id="displayNama" class="text-sm font-bold text-emerald-400">-</p>
+        </div>
+      </div>
+
+      <form id="presensiForm" onsubmit="submitPresensi(event)" class="space-y-4">
+        
         <!-- Status Kehadiran -->
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Status Kehadiran</label>
@@ -58,7 +91,26 @@
         <!-- Input Alasan (Luar Desa) -->
         <div id="alasanBox" class="hidden">
           <label class="block text-xs font-semibold uppercase tracking-wider text-amber-400 mb-1">Keterangan / Alasan Luar Desa</label>
-          <textarea id="alasanInput" rows="2" placeholder="Contoh: Izin urusan kampus / survei ke kota" class="w-full bg-slate-900/80 border border-amber-500/50 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400 text-slate-200"></textarea>
+          <textarea id="alasanInput" rows="2" placeholder="Contoh: Izin kuliah / koordinasi dinas" class="w-full bg-slate-900/80 border border-amber-500/50 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400 text-slate-200"></textarea>
+        </div>
+
+        <!-- FOTO BUKTI BISA AMBIL LANGSUNG / KAMERA -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Foto Bukti / Swafoto</label>
+          <div class="relative bg-slate-900/80 border border-dashed border-slate-600 rounded-xl p-4 text-center cursor-pointer hover:border-emerald-500 transition" onclick="document.getElementById('fotoInput').click()">
+            <input type="file" id="fotoInput" accept="image/*" capture="user" required onchange="processAndPreviewFoto(event)" class="hidden">
+            
+            <div id="uploadPlaceholder" class="space-y-1">
+              <i class="fa-solid fa-camera text-2xl text-emerald-400 mb-1"></i>
+              <p class="text-xs text-slate-300 font-medium">Ambil Foto / Upload Gambar</p>
+              <p class="text-[10px] text-slate-500">Foto akan otomatis di-compress (500 KB - 1.5 MB)</p>
+            </div>
+
+            <div id="previewContainer" class="hidden relative">
+              <img id="imgPreview" class="max-h-48 mx-auto rounded-lg border border-slate-700 shadow-md">
+              <p id="fotoSizeText" class="text-[11px] text-emerald-400 mt-2 font-medium"><i class="fa-solid fa-circle-check"></i> Foto Siap Diunggah</p>
+            </div>
+          </div>
         </div>
 
         <!-- Indikator GPS / Jarak -->
@@ -69,62 +121,98 @@
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400">Jarak Kamu:</span>
-            <span id="distanceText" class="font-semibold text-emerald-400">Mengecek Lokasi...</span>
+            <span id="distanceText" class="font-semibold text-emerald-400">Mengecek GPS...</span>
           </div>
         </div>
 
         <!-- Tombol Submit -->
-        <button type="submit" id="btnSubmit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-          <i class="fa-solid fa-location-crosshairs"></i>
+        <button type="submit" id="btnSubmit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
+          <i class="fa-solid fa-paper-plane"></i>
           <span>Kirim Presensi Sekarang</span>
         </button>
 
       </form>
     </div>
+
   </main>
 
   <!-- Footer -->
-  <footer class="p-4 text-center text-xs text-slate-500 border-t border-slate-800">
+  <footer class="p-4 text-center text-xs text-slate-500 border-t border-slate-800 max-w-md mx-auto w-full">
     &copy; 2026 KKPL Sukowiyono - STAI Diponegoro Tulungagung
   </footer>
 
   <!-- Script Logika Frontend -->
   <script>
-    // URL Web App Apps Script milikmu
     const API_URL = "https://script.google.com/macros/s/AKfycbyS98kG9SAnzC1_f6ZeYXw8wGNJHT3Ni9rD-ALpSmPucBdhcAMMuqXRl7obq_Jjz3xu/exec";
     
-    // Titik Posko Desa Sukowiyono
     const POSKO_LAT = -8.064567;
     const POSKO_LNG = 111.901234;
     const MAX_RADIUS_KM = 2.0;
 
+    let currentUser = null;
     let userLat = null;
     let userLng = null;
     let currentDistance = null;
+    let base64Image = "";
 
-    // Load Daftar Nama
-    window.addEventListener("DOMContentLoaded", async () => {
-      fetchNamaList();
-      initGPS();
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedUser = localStorage.getItem("siap_user");
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        showPresensiPage();
+      }
     });
 
-    async function fetchNamaList() {
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById("usernameInput").value.trim();
+      const btn = document.getElementById("btnLogin");
+
+      if (!username) return;
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Memverifikasi...</span>`;
+      hideAlert();
+
       try {
-        const response = await fetch(`${API_URL}?action=getNama`);
-        const data = await response.json();
-        const select = document.getElementById("namaSelect");
-        
-        if (data.status === "success" && Array.isArray(data.data)) {
-          data.data.forEach(nama => {
-            const opt = document.createElement("option");
-            opt.value = nama;
-            opt.textContent = nama;
-            select.appendChild(opt);
-          });
+        const response = await fetch(`${API_URL}?action=login&username=${encodeURIComponent(username)}`);
+        const result = await response.json();
+
+        if (result.status === "success") {
+          currentUser = result.user;
+          localStorage.setItem("siap_user", JSON.stringify(currentUser));
+          showPresensiPage();
+          showAlert(`Selamat datang, ${currentUser.nama}!`, "success");
+        } else {
+          showAlert(result.message || "Username / ID Unik tidak ditemukan!", "error");
         }
       } catch (err) {
-        showAlert("Gagal memuat daftar nama dari server.", "error");
+        showAlert("Gagal terhubung ke server login.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i><span>Masuk Sistem</span>`;
       }
+    }
+
+    function showPresensiPage() {
+      document.getElementById("loginCard").classList.add("hidden");
+      document.getElementById("presensiCard").classList.remove("hidden");
+      document.getElementById("userInfoHeader").classList.remove("hidden");
+      
+      document.getElementById("displayNama").textContent = currentUser.nama;
+      document.getElementById("userNamaHeader").textContent = currentUser.nama;
+      
+      initGPS();
+    }
+
+    function logout() {
+      localStorage.removeItem("siap_user");
+      currentUser = null;
+      document.getElementById("presensiCard").classList.add("hidden");
+      document.getElementById("userInfoHeader").classList.add("hidden");
+      document.getElementById("loginCard").classList.remove("hidden");
+      document.getElementById("usernameInput").value = "";
+      hideAlert();
     }
 
     function initGPS() {
@@ -144,7 +232,7 @@
             }
           },
           (err) => {
-            distText.textContent = "Gagal akses GPS!";
+            distText.textContent = "Akses GPS ditolak / mati!";
             distText.className = "font-semibold text-rose-400";
           },
           { enableHighAccuracy: true }
@@ -154,9 +242,8 @@
       }
     }
 
-    // Formula Haversine menghitung jarak GPS dalam KM
     function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371; // Radius bumi KM
+      const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -164,6 +251,60 @@
                 Math.sin(dLon / 2) * Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
+    }
+
+    // LOGIKA AUTO RESIZE & COMPRESS FOTO (Target: 500 KB - 1500 KB)
+    function processAndPreviewFoto(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          // Resize dimensi jika melebihi HD (max width 1600px)
+          const MAX_WIDTH = 1600;
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Kompresi bertahap target ~500KB - 1.5MB
+          let quality = 0.85;
+          let dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+          // Hitung estimasi ukuran KB
+          let head = "data:image/jpeg;base64,";
+          let sizeInBytes = Math.round((dataUrl.length - head.length) * 3 / 4);
+          let sizeInKB = Math.round(sizeInBytes / 1024);
+
+          // Jika masih > 1500 KB, turunkan kualitas gambar
+          while (sizeInKB > 1500 && quality > 0.3) {
+            quality -= 0.1;
+            dataUrl = canvas.toDataURL("image/jpeg", quality);
+            sizeInBytes = Math.round((dataUrl.length - head.length) * 3 / 4);
+            sizeInKB = Math.round(sizeInBytes / 1024);
+          }
+
+          base64Image = dataUrl;
+          document.getElementById("imgPreview").src = base64Image;
+          document.getElementById("uploadPlaceholder").classList.add("hidden");
+          document.getElementById("previewContainer").classList.remove("hidden");
+          document.getElementById("fotoSizeText").innerHTML = `<i class="fa-solid fa-circle-check"></i> Foto Siap (${sizeInKB} KB)`;
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function toggleAlasan(isLuarDesa) {
@@ -182,31 +323,36 @@
     async function submitPresensi(e) {
       e.preventDefault();
       const btn = document.getElementById("btnSubmit");
-      const nama = document.getElementById("namaSelect").value;
       const status = document.querySelector('input[name="status"]:checked').value;
       const alasan = document.getElementById("alasanInput").value;
 
-      if (!userLat || !userLng) {
-        showAlert("Lokasi GPS belum ditemukan. Izinkan akses lokasi di HP kamu!", "error");
+      if (!base64Image) {
+        showAlert("Harap ambil/upload foto bukti presensi!", "error");
         return;
       }
 
-      // Validasi Radius 2 KM
+      if (!userLat || !userLng) {
+        showAlert("GPS belum siap. Mohon izinkan akses lokasi di HP kamu!", "error");
+        return;
+      }
+
       if (status === "Hadir Posko" && currentDistance > MAX_RADIUS_KM) {
-        showAlert(`Posisi kamu (${currentDistance.toFixed(2)} km) di luar radius posko (Maks 2 km). Pilih status 'Luar Desa' jika ada kegiatan di luar.`, "warning");
+        showAlert(`Posisi kamu (${currentDistance.toFixed(2)} km) di luar radius posko (Maks 2 km). Pilih 'Luar Desa' jika ada kegiatan luar.`, "warning");
         return;
       }
 
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Mengirim Data...</span>`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Mengirim Data & Foto...</span>`;
 
       const payload = {
-        nama: nama,
+        username: currentUser.username,
+        nama: currentUser.nama,
         status: status,
         alasan: alasan,
         latitude: userLat,
         longitude: userLng,
-        jarakKm: currentDistance.toFixed(2)
+        jarakKm: currentDistance.toFixed(2),
+        foto: base64Image
       };
 
       try {
@@ -217,8 +363,11 @@
         const result = await res.json();
 
         if (result.status === "success") {
-          showAlert("Presensi berhasil dicatat! Terima kasih.", "success");
+          showAlert("Presensi & Foto berhasil dikirim! Terima kasih.", "success");
           document.getElementById("presensiForm").reset();
+          document.getElementById("uploadPlaceholder").classList.remove("hidden");
+          document.getElementById("previewContainer").classList.add("hidden");
+          base64Image = "";
           toggleAlasan(false);
         } else {
           showAlert(result.message || "Gagal menyimpan presensi.", "error");
@@ -227,7 +376,7 @@
         showAlert("Terjadi kesalahan koneksi ke server.", "error");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i><span>Kirim Presensi Sekarang</span>`;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>Kirim Presensi Sekarang</span>`;
       }
     }
 
@@ -245,6 +394,10 @@
         alert.classList.add("bg-rose-900/50", "border-rose-500", "text-rose-200");
         alert.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>${msg}</span>`;
       }
+    }
+
+    function hideAlert() {
+      document.getElementById("statusAlert").classList.add("hidden");
     }
   </script>
 </body>
