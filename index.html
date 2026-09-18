@@ -400,7 +400,7 @@
   </footer>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyABYjUYjeaL7Tc4zu2ika9n1TUKDgFCcZRHXjOM78JgIHS_kFHWsIBf3M4Su5AQxvPMg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwEvIKo4eaEeSSevpYwISQYw_ZHTUTzCEKNl452S9pM1vzz2ESSVCDZnMudSAqpWBTZUA/exec";
     
     const POSKO_LAT = -8.064567;
     const POSKO_LNG = 111.901234;
@@ -1028,7 +1028,7 @@
       const presensiRows = dataToExport.map(p => [p.waktu, p.nama, p.status, p.gps]);
       doc.autoTable({
         startY: 22,
-        head: [['Waktu', 'Nama', 'Status (Dalam/Luar Desa)', 'GPS']],
+        head: [['Waktu', 'Nama', 'Status (Tipe & Radius)', 'GPS']],
         body: presensiRows,
       });
 
