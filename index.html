@@ -24,7 +24,6 @@
     <div id="userInfoHeader" class="hidden text-right leading-tight">
       <p id="userNamaHeader" class="text-xs font-bold text-slate-800"></p>
       <p id="userJabatanHeader" class="text-[11px] font-semibold text-blue-600"></p>
-      <p id="userProdiHeader" class="text-[10px] text-slate-500"></p>
       <button onclick="logout()" class="text-[11px] text-rose-600 hover:underline font-bold mt-0.5 inline-block">Keluar <i class="fa-solid fa-right-from-bracket"></i></button>
     </div>
   </header>
@@ -61,11 +60,6 @@
 
     <!-- DASBOR ANGGOTA / MAHASISWA -->
     <div id="dashAnggotaCard" class="hidden space-y-5">
-      
-      <div id="welcomeCardAnggota" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 rounded-2xl shadow-md space-y-1">
-        <h3 id="welcomeNamaText" class="text-base font-extrabold">Halo, Selamat Datang!</h3>
-        <p id="welcomeDetailText" class="text-xs text-blue-100 font-medium"></p>
-      </div>
 
       <!-- TAB PRESENSI -->
       <div id="tabPresensi" class="bg-white border border-blue-100 p-6 rounded-2xl shadow-md space-y-5">
@@ -162,7 +156,7 @@
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal (DD/MM/YYYY)</label>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal</label>
               <input type="date" id="jurnalTanggal" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-medium text-slate-800 shadow-sm">
             </div>
             <div>
@@ -267,7 +261,7 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Tanggal Rekapitulasi (DD/MM/YYYY):</label>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Tanggal Rekapitulasi:</label>
               <input type="date" id="filterTanggalDpl" onchange="loadRekapDpl()" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm font-medium text-slate-800 shadow-sm">
             </div>
             <div class="grid grid-cols-2 gap-2 pt-1">
@@ -376,7 +370,7 @@
 
   </main>
 
-  <!-- FIXED BOTTOM NAVIGATION (TABS MENU BEKU DIBAWAH) -->
+  <!-- FIXED BOTTOM NAVIGATION -->
   <nav id="bottomNav" class="hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-40 max-w-xl mx-auto">
     <div class="grid grid-cols-4 gap-1 p-2 text-center text-xs font-bold">
       <button id="tabBtnPresensi" onclick="switchTab('presensi')" class="py-2.5 rounded-xl bg-blue-600 text-white transition shadow-sm flex flex-col items-center gap-0.5">
@@ -400,7 +394,7 @@
   </footer>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyXwkKPKsjqSN61xspT_CTGysY4lAoEF8CQRJHaCmhHYj-H_X0G6sK2qJekU5Ehqp3CnA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyS98kG9SAnzC1_f6ZeYXw8wGNJHT3Ni9rD-ALpSmPucBdhcAMMuqXRl7obq_Jjz3xu/exec";
     
     const POSKO_LAT = -8.0202255;
     const POSKO_LNG = 111.8930588;
@@ -446,7 +440,7 @@
           currentUser = result.user;
           localStorage.setItem("siap_user", JSON.stringify(currentUser));
           checkUserRoleAndRedirect();
-          showAlert(`Selamat datang, ${currentUser.nama}!`, "success");
+          showAlert(`Login berhasil, selamat datang ${currentUser.nama}!`, "success");
         } else {
           showAlert(result.message || "Username Unik tidak terdaftar!", "error");
         }
@@ -463,20 +457,19 @@
       document.getElementById("userInfoHeader").classList.remove("hidden");
       
       document.getElementById("userNamaHeader").textContent = currentUser.nama;
-      document.getElementById("userJabatanHeader").textContent = currentUser.jabatan;
-      document.getElementById("userProdiHeader").textContent = currentUser.prodi || "";
-
-      document.getElementById("welcomeNamaText").textContent = `Halo, Selamat Datang, ${currentUser.nama}`;
-      document.getElementById("welcomeDetailText").textContent = `${currentUser.jabatan} ${currentUser.prodi ? ' - ' + currentUser.prodi : ''}`;
+      document.getElementById("userJabatanHeader").textContent = `${currentUser.jabatan}${currentUser.prodi ? ' - ' + currentUser.prodi : ''}`;
 
       if (currentUser.jabatan && currentUser.jabatan.toUpperCase() === "DPL") {
         document.getElementById("dashDplCard").classList.remove("hidden");
         document.getElementById("dashAnggotaCard").classList.add("hidden");
         document.getElementById("bottomNav").classList.add("hidden");
-        loadRekapDpl();
-        loadAllJurnalDpl();
-        loadProkerData();
-        loadPiketData();
+        
+        Promise.all([
+          loadAllJurnalDpl(),
+          loadRekapDpl(),
+          loadProkerData(),
+          loadPiketData()
+        ]);
       } else {
         document.getElementById("dashAnggotaCard").classList.remove("hidden");
         document.getElementById("dashDplCard").classList.add("hidden");
@@ -522,7 +515,6 @@
         document.getElementById("dplSectionMonitoring").classList.remove("hidden");
         document.getElementById("dplMenuMonitoring").className = "py-3 rounded-xl bg-blue-600 text-white transition font-bold shadow-sm";
         document.getElementById("dplMenuInfo").className = "py-3 rounded-xl text-slate-600 hover:bg-slate-100 transition font-bold";
-        loadRekapDpl();
       }
     }
 
@@ -537,7 +529,6 @@
         document.getElementById("containerRekapJurnal").classList.remove("hidden");
         document.getElementById("subMonitoringJurnal").className = "py-2.5 rounded-lg bg-blue-600 text-white font-bold text-xs shadow-sm transition";
         document.getElementById("subMonitoringPresensi").className = "py-2.5 rounded-lg text-slate-600 font-bold text-xs hover:bg-slate-200 transition";
-        loadAllJurnalDpl();
       }
     }
 
@@ -547,23 +538,26 @@
       const labelKet = document.getElementById("labelKeteranganKhusus");
       const inputKet = document.getElementById("keteranganKhususInput");
 
+      boxSub.classList.add("hidden");
+      boxKet.classList.add("hidden");
+      inputKet.removeAttribute("required");
+      inputKet.value = ""; 
+
       if (val === "Presensi Kegiatan") {
         boxSub.classList.remove("hidden");
-      } else {
-        boxSub.classList.add("hidden");
-      }
-
+      } 
+      
       if (val === "Izin" || val === "Sakit") {
         boxKet.classList.remove("hidden");
         inputKet.setAttribute("required", "true");
         labelKet.textContent = val === "Izin" ? "Alasan Izin (Wajib)" : "Keterangan Sakit (Wajib)";
-      } else if (currentDistance && currentDistance > MAX_RADIUS_KM) {
+      } else if (currentDistance !== null && currentDistance > (MAX_RADIUS_M / 1000)) {
         boxKet.classList.remove("hidden");
         inputKet.setAttribute("required", "true");
-        labelKet.textContent = "Alasan Berada di Luar Radius Posko (> 2km)";
-      } else {
-        boxKet.classList.add("hidden");
-        inputKet.removeAttribute("required");
+        labelKet.textContent = "Alasan Berada di Luar Radius Posko (> 500m)";
+        document.getElementById("distanceText").className = "font-bold text-amber-600";
+      } else if (currentDistance !== null && currentDistance <= (MAX_RADIUS_M / 1000)) {
+        document.getElementById("distanceText").className = "font-bold text-blue-600";
       }
     }
 
@@ -587,11 +581,14 @@
           (pos) => {
             userLat = pos.coords.latitude;
             userLng = pos.coords.longitude;
-            currentDistance = calculateDistance(userLat, userLng, POSKO_LAT, POSKO_LNG);
-            
-            distText.textContent = `${currentDistance.toFixed(2)} km dari posko`;
+            const distanceKm = calculateDistance(userLat, userLng, POSKO_LAT, POSKO_LNG);
+            currentDistance = distanceKm;
+            const distanceMeters = distanceKm * 1000;
+
+            distText.textContent = `${distanceMeters < 1000 ? distanceMeters.toFixed(0) + ' m' : distanceKm.toFixed(2) + ' km'} dari posko`;
             const tipe = document.getElementById("tipePresensi").value;
-            if (currentDistance <= MAX_RADIUS_KM) {
+
+            if (distanceMeters <= MAX_RADIUS_M) {
               distText.className = "font-bold text-blue-600";
               if (tipe !== "Izin" && tipe !== "Sakit") {
                 document.getElementById("boxKeteranganKhusus").classList.add("hidden");
@@ -599,9 +596,11 @@
               }
             } else {
               distText.className = "font-bold text-amber-600";
-              document.getElementById("boxKeteranganKhusus").classList.remove("hidden");
-              document.getElementById("keteranganKhususInput").setAttribute("required", "true");
-              document.getElementById("labelKeteranganKhusus").textContent = "Alasan Berada di Luar Radius Posko (> 2km)";
+              if (tipe !== "Izin" && tipe !== "Sakit") {
+                document.getElementById("boxKeteranganKhusus").classList.remove("hidden");
+                document.getElementById("keteranganKhususInput").setAttribute("required", "true");
+                document.getElementById("labelKeteranganKhusus").textContent = "Alasan Berada di Luar Radius Posko (> 500m)";
+              }
             }
           },
           (err) => {
@@ -730,7 +729,6 @@
       }
     }
 
-    // NOTIFIKASI PRESENSI POP-UP 5 DETIK REALTIME
     function showSuccessPresensiNotification(waktuServer) {
       const alert = document.getElementById("statusAlert");
       alert.className = "mb-4 p-4 rounded-xl text-sm font-bold border flex flex-col items-center justify-center text-center gap-1.5 bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm transition-all duration-300";
@@ -777,7 +775,6 @@
         const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
         const result = await res.json();
         if (result.status === "success") {
-          // NOTIFIKASI JURNAL MASUK DATABASE SIAP
           showAlert("Selamat, jurnalmu sudah masuk database SIAP", "success");
           e.target.reset();
         } else {
@@ -963,12 +960,18 @@
       }
 
       if (jenis === "Harian") {
-        const rawDate = document.getElementById("filterTglJurnalDpl").value;
-        const targetTgl = formatDateToDDMMYYYY(rawDate);
-        dataFiltered = dataFiltered.filter(j => j.tanggal === targetTgl);
+        const rawDate = document.getElementById("filterTglJurnalDpl").value; 
+        const targetTgl = formatDateToDDMMYYYY(rawDate); 
+        dataFiltered = dataFiltered.filter(j => {
+          let cleanJurnalTgl = String(j.tanggal).trim();
+          if (cleanJurnalTgl.includes(" ")) {
+            cleanJurnalTgl = cleanJurnalTgl.split(" ")[0]; 
+          }
+          return cleanJurnalTgl === targetTgl;
+        });
       } else if (jenis === "Mingguan") {
         const targetMinggu = document.getElementById("filterMingguKeDpl").value;
-        dataFiltered = dataFiltered.filter(j => String(j.mingguKe) === String(targetMinggu));
+        dataFiltered = dataFiltered.filter(j => String(j.mingguKe).trim() === String(targetMinggu).trim());
       }
 
       if (dataFiltered.length > 0) {
@@ -1024,7 +1027,6 @@
         dataToExport = dataToExport.filter(p => p.nama.toLowerCase() === mhsFilter.toLowerCase());
       }
 
-      // PDF TANPA LINK FOTO SESUAI PERINTAH
       const presensiRows = dataToExport.map(p => [p.waktu, p.nama, p.status, p.gps]);
       doc.autoTable({
         startY: 22,
@@ -1045,10 +1047,11 @@
       }
       if (jenis === "Harian") {
         const rawDate = document.getElementById("filterTglJurnalDpl").value;
-        dataFiltered = dataFiltered.filter(j => j.tanggal === formatDateToDDMMYYYY(rawDate));
+        const targetTgl = formatDateToDDMMYYYY(rawDate);
+        dataFiltered = dataFiltered.filter(j => String(j.tanggal).trim() === targetTgl);
       } else if (jenis === "Mingguan") {
         const targetMinggu = document.getElementById("filterMingguKeDpl").value;
-        dataFiltered = dataFiltered.filter(j => String(j.mingguKe) === String(targetMinggu));
+        dataFiltered = dataFiltered.filter(j => String(j.mingguKe).trim() === String(targetMinggu).trim());
       }
 
       const wb = XLSX.utils.book_new();
@@ -1069,10 +1072,11 @@
       }
       if (jenis === "Harian") {
         const rawDate = document.getElementById("filterTglJurnalDpl").value;
-        dataFiltered = dataFiltered.filter(j => j.tanggal === formatDateToDDMMYYYY(rawDate));
+        const targetTgl = formatDateToDDMMYYYY(rawDate);
+        dataFiltered = dataFiltered.filter(j => String(j.tanggal).trim() === targetTgl);
       } else if (jenis === "Mingguan") {
         const targetMinggu = document.getElementById("filterMingguKeDpl").value;
-        dataFiltered = dataFiltered.filter(j => String(j.mingguKe) === String(targetMinggu));
+        dataFiltered = dataFiltered.filter(j => String(j.mingguKe).trim() === String(targetMinggu).trim());
       }
 
       doc.setFontSize(14);
